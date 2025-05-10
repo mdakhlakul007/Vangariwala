@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vangariwala - Beta Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/heroicons@2.1.3/24/outline/index.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/heroicons@2.1.3/24/solid/index.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Primary theme colors */
+            --primary-orange: #F97316; /* Tailwind orange-500 */
+            --secondary-yellow: #FACC15; /* Tailwind yellow-400 */
+            --accent-dark: #1F2937; /* Tailwind gray-800 */
+            --accent-light: #FFFFFF;
+            --text-dark: #374151; /* Tailwind gray-700 */
+            --text-light: #F3F4F6; /* Tailwind gray-100 */
+             padding-bottom: 60px; /* Add padding to body for fixed bottom nav */
+        }
+        .page {
+            display: none; /* Hidden by default, shown by JS */
+            min-height: 100vh;
+            animation: fadeIn 0.5s ease-in-out;
+             padding-bottom: 70px; /* Add padding to page content to not be hidden by bottom nav */
+        }
+        .page.active {
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-primary {
+            background-color: var(--primary-orange);
+            color: var(--accent-light);
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #EA580C; /* Tailwind orange-600 */
+        }
+         .btn-secondary {
+            background-color: var(--secondary-yellow);
+            color: var(--text-dark);
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #EAB308; /* Tailwind yellow-500 */
+        }
+        .bottom-nav {
+            position: fixed; /* Fixed at the bottom */
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50; /* Ensure it's above other content */
+            background-color: rgba(255, 255, 255, 0.9); /* Slight transparency */
+            backdrop-filter: blur(5px);
+            border-top: 1px solid #e5e7eb; /* gray-200 */
+             display: none; /* Hidden by default */
+        }
+         body[data-logged-in="true"] .bottom-nav {
+             display: grid; /* Use grid for layout when logged in */
+         }
+
+
+        .nav-item.active svg {
+            color: var(--primary-orange);
+        }
+        .nav-item.active span {
+            color: var(--primary-orange);
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .header-main {
+            background-color: var(--primary-orange);
+            color: var(--accent-light);
+        }
+        .star-rating svg {
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+            color: var(--secondary-yellow);
+            cursor: pointer; /* Indicate clickable */
+        }
+         .star-rating svg.empty {
+             color: #d1d5db; /* Tailwind gray-400 for empty stars */
+         }
+        /* Custom scrollbar for lists */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--primary-orange);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #EA580C;
+        }
+         .lang-toggle button {
+             padding: 0.25rem 0.5rem;
+             border-radius: 0.25rem;
+             background-color: rgba(255,255,255,0.2);
+             color: white;
+             font-size: 0.75rem;
+         }
+          .lang-toggle button.active {
+              background-color: white;
+              color: var(--primary-orange);
+              font-weight: bold;
+          }
+          .lang-bn { display: none; } /* Hide Bengali text by default */
+          .lang-en { display: none; } /* Hide English text by default */
+
+          /* Apply Noto Sans Bengali to elements with lang-bn */
+          .lang-bn, body[data-lang="bn"] .lang-bn {
+              font-family: 'Noto Sans Bengali', sans-serif;
+          }
+           /* Ensure Inter is used for English or when no specific lang class is present */
+          .lang-en, body[data-lang="en"] .lang-en {
+              font-family: 'Inter', sans-serif;
+          }
+
+          body[data-lang="en"] .lang-en { display: inline; } /* Show English when body data-lang is 'en' */
+          body[data-lang="bn"] .lang-bn { display: inline; } /* Show Bengali when body data-lang is 'bn' */
+
+
+          /* Modal styles */
+         .modal-overlay {
+             position: fixed;
+             top: 0;
+             left: 0;
+             right: 0;
+             bottom: 0;
+             background-color: rgba(0, 0, 0, 0.6);
+             display: flex;
+             justify-content: center;
+             align-items: center;
+             z-index: 100;
+             opacity: 0;
+             visibility: hidden;
+             transition: opacity 0.3s ease, visibility 0.3s ease;
+         }
+         .modal-overlay.visible {
+             opacity: 1;
+             visibility: visible;
+         }
+         .modal-content {
+             background-color: white;
+             padding: 1.5rem;
+             border-radius: 0.75rem;
+             max-width: 90%;
+             max-height: 90%;
+             overflow-y: auto;
+             position: relative;
+             transform: translateY(20px);
+             transition: transform 0.3s ease;
+         }
+         .modal-overlay.visible .modal-content {
+             transform: translateY(0);
+         }
+         .modal-close-btn {
+             position: absolute;
+             top: 0.75rem;
+             right: 0.75rem;
+             background: none;
+             border: none;
+             cursor: pointer;
+             color: #4b5563; /* gray-600 */
+         }
+         .modal-close-btn:hover {
+             color: #1f2937; /* gray-800 */
+         }
+
+    </style>
+</head>
+<body class="bg-orange-50" data-lang="bn">
+    <div id="app-container" class="max-w-md mx-auto shadow-lg relative">
+        <div id="page-splash" class="page active flex-col justify-center items-center bg-orange-500 text-white p-8">
+            <div class="text-center flex-grow flex flex-col justify-center items-center">
+                 <h1 class="text-6xl font-bold mb-4 lang-bn" style="font-family: 'Noto Sans Bengali', sans-serif;">ভাঙ্গারিওয়ালা</h1>
+                 <h1 class="text-6xl font-bold mb-4 lang-en">Vangariwala</h1>
+                 <p class="text-2xl lang-bn">আপনার বর্জ্য ব্যবস্থাপনার সঙ্গী</p>
+                 <p class="text-2xl lang-en">Your Waste Management Partner</p>
+            </div>
+            <div class="text-center pb-8">
+                <p class="text-sm text-orange-200 lang-bn">একটি উদ্যোগ</p>
+                 <p class="text-sm text-orange-200 lang-en">POWERED BY</p>
+                 <img src="input_file_0.png" alt="Vangariwala Logo" class="mx-auto mt-2 h-28 object-contain" onerror="this.onerror=null; this.src='https://placehold.co/200x100?text=Logo';">
+            </div>
+        </div>
+
+        <div id="page-login" class="page flex-col justify-center items-center bg-orange-500 p-8">
+             <div class="lang-toggle absolute top-4 right-4 z-10">
+                 <button data-lang-code="bn" class="active">BN</button>
+                 <button data-lang-code="en">EN</button>
+             </div>
+             <img src="input_file_0.png" alt="Vangariwala Logo" class="h-24 object-contain mb-6" onerror="this.onerror=null; this.src='https://placehold.co/150x80?text=Logo';">
+            <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
+                 <h2 class="text-3xl font-semibold text-orange-600 mb-2 lang-bn">স্বাগতম!</h2>
+                 <h2 class="text-3xl font-semibold text-orange-600 mb-2 lang-en">Welcome!</h2>
+                 <p class="text-gray-600 mb-6 lang-bn">আপনার মোবাইল নম্বর বা ইমেইল ও পাসওয়ার্ড দিন</p>
+                 <p class="text-gray-600 mb-6 lang-en">Enter your mobile number or email and password</p>
+                <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <span class="px-3 py-3 bg-gray-100 text-gray-600">+880</span>
+                    <input type="tel" id="login-mobile-number" placeholder="মোবাইল নম্বর / Mobile Number" class="p-3 w-full focus:outline-none text-gray-700">
+                </div>
+                <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden mb-4">
+                    <hero-icon name="envelope" class="w-6 h-6 text-gray-400 mx-3"></hero-icon>
+                    <input type="email" id="login-email" placeholder="ইমেইল / Email" class="p-3 w-full focus:outline-none text-gray-700">
+                </div>
+                 <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden mb-6">
+                    <hero-icon name="lock-closed" class="w-6 h-6 text-gray-400 mx-3"></hero-icon>
+                    <input type="password" id="login-password" placeholder="পাসওয়ার্ড / Password" class="p-3 w-full focus:outline-none text-gray-700">
+                </div>
+                <button id="login-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg">
+                     <span class="lang-bn">লগইন করুন</span> <span class="lang-en">Login</span>
+                </button>
+                 <p class="text-center text-gray-600 mt-4">
+                    <span class="lang-bn">নতুন ব্যবহারকারী?</span> <span class="lang-en">New user?</span>
+                     <button id="goto-signup-from-login-btn" class="text-orange-600 hover:underline font-semibold">
+                         <span class="lang-bn">এখানে সাইন আপ করুন</span> <span class="lang-en">Sign up here</span>
+                     </button>
+                </p>
+            </div>
+        </div>
+
+        <div id="page-signup" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3" data-target-page="page-login"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">অ্যাকাউন্ট তৈরি করুন</h1>
+                    <h1 class="text-xl font-semibold lang-en">Create Account</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                 <p class="text-gray-700 text-center lang-bn">আপনার তথ্য দিয়ে সাইন আপ করুন:</p>
+                 <p class="text-gray-700 text-center lang-en">Sign up with your information:</p>
+                 <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                    <span class="px-3 py-3 bg-gray-100 text-gray-600">+880</span>
+                    <input type="tel" id="signup-mobile-number" placeholder="মোবাইল নম্বর (আবশ্যক) / Mobile (Required)" class="p-3 w-full focus:outline-none text-gray-700">
+                </div>
+                 <input type="email" id="signup-email" placeholder="ইমেইল (ঐচ্ছিক) / Email (Optional)" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                <input type="text" id="signup-name" placeholder="আপনার নাম / Your Name" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                 <input type="password" id="signup-password" placeholder="পাসওয়ার্ড সেট করুন / Set Password" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                <textarea id="signup-address" placeholder="আপনার ঠিকানা / Your Address" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent h-24"></textarea>
+                <select id="signup-user-type" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                    <option value="" class="lang-bn">ব্যবহারকারীর ধরন নির্বাচন করুন</option>
+                    <option value="" class="lang-en">Select User Type</option>
+                    <option value="household"><span class="lang-bn">গৃহস্থালি (বর্জ্য দাতা)</span><span class="lang-en">Household (Waste Provider)</span></option>
+                    <option value="collector"><span class="lang-bn">সংগ্রাহক (ভাঙ্গারিওয়ালা)</span><span class="lang-en">Collector (Vangariwala)</span></option>
+                </select>
+                 <div class="flex flex-col items-center justify-center">
+                    <label for="signup-photo" class="block text-gray-700 font-semibold mb-2 lang-bn">ছবি আপলোড করুন (ঐচ্ছিক)</label>
+                    <label for="signup-photo" class="block text-gray-700 font-semibold mb-2 lang-en">Upload Photo (Optional)</label>
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-full overflow-hidden flex items-center justify-center">
+                        <img id="signup-photo-preview" src="https://placehold.co/128x128/E5E7EB/4B5563?text=+" alt="Photo Placeholder" class="w-full h-full object-cover text-gray-600">
+                    </div>
+                    <input type="file" id="signup-photo" accept="image/*" class="mt-3 text-gray-700">
+                </div>
+
+                <button id="create-account-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg mt-4">
+                     <span class="lang-bn">অ্যাকাউন্ট তৈরি করুন</span> <span class="lang-en">Create Account</span>
+                </button>
+                 <p class="text-center text-gray-600 mt-4">
+                    <span class="lang-bn">ইতিমধ্যে একটি অ্যাকাউন্ট আছে?</span> <span class="lang-en">Already have an account?</span>
+                     <button id="goto-login-from-signup-btn" class="text-orange-600 hover:underline font-semibold">
+                         <span class="lang-bn">এখানে লগইন করুন</span> <span class="lang-en">Login here</span>
+                     </button>
+                </p>
+            </main>
+        </div>
+
+        <div id="page-household-dashboard" class="page flex-col bg-orange-50">
+            <header class="header-main p-4 flex justify-between items-center shadow-md">
+                <div class="flex items-center">
+                    <img src="input_file_0.png" alt="Logo" class="h-10 w-10 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/40x40?text=L';">
+                    <div>
+                        <h1 class="text-xl font-bold" id="hh-dashboard-name"></h1>
+                        <p class="text-sm text-orange-100">
+                             <span class="lang-bn">আপনাকে স্বাগতম!</span> <span class="lang-en">Welcome!</span>
+                             <span id="current-date-household"></span>
+                        </p>
+                    </div>
+                </div>
+                <img src="https://placehold.co/40x40/FFE4B5/A0522D?text=U" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white" id="household-avatar">
+            </header>
+            <main class="flex-grow p-4 space-y-6 overflow-y-auto custom-scrollbar">
+                 <div class="card p-4 bg-white text-gray-700">
+                     <h3 class="text-md font-semibold text-orange-600 mb-2">
+                          <span class="lang-bn">আপনার বর্তমান পয়েন্ট:</span> <span class="lang-en">Your Current Points:</span>
+                         <span id="hh-current-points" class="text-xl text-green-600 font-bold">0</span>
+                     </h3>
+                     <button id="cash-out-btn" class="w-full btn-secondary font-semibold py-2 px-4 rounded-lg mt-2">
+                         <span class="lang-bn">পয়েন্ট ক্যাশ আউট করুন</span> <span class="lang-en">Cash Out Points</span>
+                     </button>
+                 </div>
+
+                 <div class="card p-4 bg-white text-gray-700">
+                      <h3 class="text-md font-semibold text-orange-600 mb-2">
+                           <span class="lang-bn">কার্বন ফুটপ্রিন্ট বাঁচিয়েছেন:</span> <span class="lang-en">Carbon Footprint Saved:</span>
+                      </h3>
+                      <p class="text-xl text-blue-600 font-bold"><span id="carbon-saved-kg">0</span> kg CO2e</p>
+                      <p class="text-xs text-gray-500 mt-1 lang-bn">(আনুমানিক হিসাব, ১ কেজি বর্জ্যে ১.৫ কেজি CO2e)</p>
+                      <p class="text-xs text-gray-500 mt-1 lang-en">(Estimated, 1 kg waste prevents 1.5 kg CO2e)</p>
+                 </div>
+
+
+                <h2 class="text-xl font-semibold text-orange-700 mb-3">
+                     <span class="lang-bn">সেবা গ্রহণ করুন</span> <span class="lang-en">Take Service</span>
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <button id="call-vangariwala-btn" class="card p-4 text-center text-gray-700 hover:shadow-lg transition-shadow">
+                         <img src="https://placehold.co/100x60/FFEDD5/9A3412?text=Call" alt="Call Vangariwala" class="mx-auto mb-2 rounded h-12 object-contain">
+                        <p class="font-semibold lang-bn">ভাঙ্গারিওয়ালাকে ডাকুন</p>
+                        <p class="font-semibold lang-en">Call Vangariwala</p>
+                    </button>
+                     <div class="card p-4 text-center text-gray-500 opacity-70">
+                        <img src="https://placehold.co/100x60/FEF3C7/B45309?text=Invest" alt="Waste to Energy" class="mx-auto mb-2 rounded h-12 object-contain">
+                        <p class="font-semibold lang-bn">"WASTE TO ENERGY" প্রকল্পে বিনিয়োগ</p>
+                        <p class="font-semibold lang-en">Invest in "WASTE TO ENERGY"</p>
+                        <p class="text-xs lang-bn">(শীঘ্রই আসছে)</p><p class="text-xs lang-en">(Coming Soon)</p>
+                    </div>
+                     <div class="card p-4 text-center text-gray-500 opacity-70">
+                        <img src="https://placehold.co/100x60/FFF7ED/C2410C?text=Contest" alt="Contest" class="mx-auto mb-2 rounded h-12 object-contain">
+                        <p class="font-semibold lang-bn">প্রতিযোগিতা ও পুরস্কার</p><p class="font-semibold lang-en">Contest & Prizes</p>
+                        <p class="text-xs lang-bn">(শীঘ্রই আসছে)</p><p class="text-xs lang-en">(Coming Soon)</p>
+                    </div>
+                </div>
+                <h2 class="text-xl font-semibold text-orange-700 mb-3">
+                     <span class="lang-bn">সেবার তালিকা</span> <span class="lang-en">Service List</span>
+                </h2>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <button class="nav-item-household card p-3 flex flex-col items-center justify-center text-gray-700 hover:shadow-md" data-page="page-schedule-pickup">
+                        <hero-icon name="truck" class="w-8 h-8 text-orange-500 mb-1"></hero-icon>
+                        <span class="text-xs font-medium lang-bn">পিকআপ নির্ধারণ</span><span class="text-xs font-medium lang-en">Schedule Pickup</span>
+                    </button>
+                    <button class="nav-item-household card p-3 flex flex-col items-center justify-center text-gray-700 hover:shadow-md" data-page="page-points-history">
+                        <hero-icon name="gift" class="w-8 h-8 text-orange-500 mb-1"></hero-icon>
+                        <span class="text-xs font-medium lang-bn">পয়েন্ট অর্জন</span><span class="text-xs font-medium lang-en">Points</span>
+                    </button>
+                     <button class="nav-item-household card p-3 flex flex-col items-center justify-center text-gray-700 hover:shadow-md" data-page="page-feedback">
+                        <hero-icon name="chat-bubble-left-ellipsis" class="w-8 h-8 text-orange-500 mb-1"></hero-icon>
+                        <span class="text-xs font-medium lang-bn">ফিডব্যাক</span><span class="text-xs font-medium lang-en">Feedback</span>
+                    </button>
+                    <button class="nav-item-household card p-3 flex flex-col items-center justify-center text-gray-700 hover:shadow-md" data-page="page-awareness">
+                        <hero-icon name="academic-cap" class="w-8 h-8 text-orange-500 mb-1"></hero-icon>
+                        <span class="text-xs font-medium lang-bn">সচেতনতা</span><span class="text-xs font-medium lang-en">Awareness</span>
+                    </button>
+                     <div class="card p-3 flex flex-col items-center justify-center text-gray-400 opacity-70">
+                        <hero-icon name="trophy" class="w-8 h-8 mb-1"></hero-icon>
+                        <span class="text-xs font-medium lang-bn">প্রতিযোগিতা</span><span class="text-xs font-medium lang-en">Contest</span>
+                    </div>
+                     <div class="card p-3 flex flex-col items-center justify-center text-gray-400 opacity-70">
+                        <hero-icon name="puzzle-piece" class="w-8 h-8 mb-1"></hero-icon>
+                        <span class="text-xs font-medium lang-bn">গেমস</span><span class="text-xs font-medium lang-en">Games</span>
+                    </div>
+                </div>
+                 <div class="mt-6">
+                    <img src="https://placehold.co/300x150/FFF1E6/D97706?text=Educational+Content" alt="Educational Content" class="w-full rounded-lg shadow">
+                </div>
+            </main>
+        </div>
+
+        <div id="page-collector-dashboard" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex justify-between items-center shadow-md">
+                <div class="flex items-center">
+                    <img src="input_file_0.png" alt="Logo" class="h-10 w-10 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/40x40?text=L';">
+                    <div>
+                        <h1 class="text-xl font-bold" id="cl-dashboard-name"></h1>
+                        <p class="text-sm text-orange-100">
+                             <span class="lang-bn">আপনাকে স্বাগতম!</span> <span class="lang-en">Welcome!</span>
+                             <span id="current-date-collector"></span>
+                        </p>
+                    </div>
+                </div>
+                <img src="https://placehold.co/40x40/FFDAB9/8B4513?text=C" alt="Collector Avatar" class="w-10 h-10 rounded-full border-2 border-white" id="collector-avatar">
+            </header>
+            <main class="flex-grow p-4 space-y-4 overflow-y-auto custom-scrollbar">
+                 <button class="w-full btn-secondary font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg flex items-center justify-center" id="search-location-btn">
+                    <hero-icon name="map-pin" class="w-5 h-5 mr-2"></hero-icon> <span class="lang-bn">সরাসরি বর্জ্য লোকেশন অনুসন্ধান</span> <span class="lang-en">Search Waste Location</span>
+                </button>
+                <h2 class="text-xl font-semibold text-orange-700 pt-2">
+                     <span class="lang-bn">বর্জ্য সংগ্রহ সূচি</span> <span class="lang-en">Collection Schedule</span>
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white rounded-lg shadow">
+                        <thead class="bg-orange-100 text-orange-700">
+                            <tr>
+                                <th class="p-3 text-left text-sm font-semibold lang-bn">নাম</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-en">Name</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-bn">লোকেশন</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-en">Location</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-bn">টাইপ</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-en">Type</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-bn">সময়</th>
+                                <th class="p-3 text-left text-sm font-semibold lang-en">Time</th>
+                            </tr>
+                        </thead>
+                         <tbody id="collection-schedule-list" class="text-gray-700">
+                             </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+
+        <div id="page-collector-profile" class="page flex-col bg-gray-900 text-white">
+            <header class="header-main p-4 flex items-center shadow-md bg-gray-800">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-gray-700 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">সংগ্রাহকের প্রোফাইল</h1>
+                    <h1 class="text-xl font-semibold lang-en">Collector Profile</h1>
+                </div>
+                </header>
+            <main class="flex-grow p-6 space-y-6 overflow-y-auto custom-scrollbar items-center flex flex-col">
+                <img src="https://placehold.co/100x100/FFDAB9/8B4513?text=C" alt="Collector Avatar" class="w-24 h-24 rounded-full border-4 border-orange-400 shadow-lg" id="collector-profile-avatar-view">
+                <h2 class="text-2xl font-bold text-orange-300" id="collector-profile-name-view"></h2>
+
+                <div class="w-full max-w-sm space-y-3">
+                    <div class="bg-gray-800 p-3 rounded-lg shadow"><span class="font-semibold text-orange-200 lang-bn">নাম:</span><span class="font-semibold text-orange-200 lang-en">Name:</span> <span id="collector-profile-name-detail-view"></span></div>
+                    <div class="bg-gray-800 p-3 rounded-lg shadow"><span class="font-semibold text-orange-200 lang-bn">ফোন:</span><span class="font-semibold text-orange-200 lang-en">Phone:</span> <span id="collector-profile-phone-view"></span></div>
+                    <div class="bg-gray-800 p-3 rounded-lg shadow">
+                        <span class="font-semibold text-orange-200 lang-bn">সংগ্রহ এলাকা/ঠিকানা:</span><span class="font-semibold text-orange-200 lang-en">Collection Area/Address:</span>
+                        <p id="collector-profile-area-view"></p>
+                    </div>
+                    <div class="bg-gray-800 p-3 rounded-lg shadow">
+                         <span class="font-semibold text-orange-200 lang-bn">অন্যান্য বিবরণ:</span><span class="font-semibold text-orange-200 lang-en">Other Details:</span>
+                         <p id="collector-profile-details-view"></p>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <h3 class="text-xl font-semibold text-orange-300 mb-2 lang-bn">ফিডব্যাক</h3><h3 class="text-xl font-semibold text-orange-300 mb-2 lang-en">Feedback</h3>
+                    <div class="star-rating flex justify-center" id="collector-star-rating">
+                        </div>
+                    <p class="text-sm text-gray-400 mt-1">(<span id="collector-rating-count"></span> ratings)</p>
+                </div>
+                
+                <button class="edit-profile-btn w-full bg-yellow-500 text-gray-800 font-semibold py-3 px-6 rounded-lg mt-8 hover:bg-yellow-600 flex items-center justify-center" data-page="page-collector-profile-edit">
+                    <hero-icon name="pencil-square" class="w-5 h-5 mr-2"></hero-icon>
+                    <span class="lang-bn">প্রোফাইল সম্পাদনা করুন</span> <span class="lang-en">Edit Profile</span>
+                </button>
+
+                 <button class="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg mt-10 hover:bg-blue-600" id="contact-us-collector-btn"> <span class="lang-bn">যোগাযোগ করুন</span><span class="lang-en">Contact Us</span>
+                </button>
+                 <button class="w-full bg-red-500 text-white font-semibold py-3 px-6 rounded-lg mt-6 hover:bg-red-600" onclick="logout()"> <span class="lang-bn">লগ আউট</span><span class="lang-en">Logout</span>
+                </button>
+            </main>
+        </div>
+
+        <div id="page-collector-profile-edit" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">প্রোফাইল সম্পাদনা করুন</h1>
+                    <h1 class="text-xl font-semibold lang-en">Edit Collector Profile</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                 <div class="flex flex-col items-center justify-center">
+                    <label for="edit-collector-photo" class="block text-gray-700 font-semibold mb-2 lang-bn">প্রোফাইল ছবি</label>
+                    <label for="edit-collector-photo" class="block text-gray-700 font-semibold mb-2 lang-en">Profile Photo</label>
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-full overflow-hidden flex items-center justify-center">
+                        <img id="edit-collector-photo-preview" src="https://placehold.co/128x128/E5E7EB/4B5563?text=+" alt="Photo Placeholder" class="w-full h-full object-cover text-gray-600">
+                    </div>
+                    <input type="file" id="edit-collector-photo" accept="image/*" class="mt-3 text-gray-700">
+                </div>
+                <input type="text" id="edit-collector-name" placeholder="আপনার নাম / Your Name" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                <input type="tel" id="edit-collector-phone" placeholder="ফোন / Phone" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-gray-100" readonly>
+                <input type="text" id="edit-collector-area" placeholder="আপনার ঠিকানা (সংগ্রহ এলাকা) / Your Address (Collection Area)" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                <textarea id="edit-collector-details" placeholder="অন্যান্য বিবরণ (ঐচ্ছিক) / Other Details (Optional)" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent h-24"></textarea>
+
+                <button id="save-collector-profile-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg mt-4">
+                     <span class="lang-bn">পরিবর্তন সংরক্ষণ করুন</span> <span class="lang-en">Save Changes</span>
+                </button>
+            </main>
+        </div>
+
+        <div id="page-points-history" class="page flex-col bg-gray-50">
+             <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">পয়েন্ট অর্জন / ইতিহাস</h1>
+                    <h1 class="text-xl font-semibold lang-en">Earn Points / History</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <div class="card p-6 bg-white text-gray-700">
+                    <h2 class="text-lg font-semibold text-orange-600 mb-3 lang-bn">পয়েন্টের জন্য বর্জ্য জমা দিন</h2>
+                    <h2 class="text-lg font-semibold text-orange-600 mb-3 lang-en">Submit Waste for Points</h2>
+                    <textarea id="waste-description-points" placeholder="বর্জ্যের বিবরণ (ঐচ্ছিক) / Waste description (optional)" class="w-full p-2 border border-gray-300 rounded-lg mb-3 h-24 text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent"></textarea>
+                    <select id="waste-type-points" class="w-full p-2 border border-gray-300 rounded-lg mb-3 text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                        <option value="inorganic"><span class="lang-bn">অজৈব বর্জ্য</span><span class="lang-en">Inorganic</span></option>
+                        <option value="organic"><span class="lang-bn">জৈব বর্জ্য</span><span class="lang-en">Organic</span></option>
+                        <option value="electronic"><span class="lang-bn">ইলেকট্রনিক বর্জ্য</span><span class="lang-en">Electronic</span></option>
+                        <option value="plastic"><span class="lang-bn">প্লাস্টিক বর্জ্য</span><span class="lang-en">Plastic</span></option>
+                         <option value="paper"><span class="lang-bn">কাগজ বর্জ্য</span><span class="lang-en">Paper</span></option>
+                         <option value="metal"><span class="lang-bn">ধাতব বর্জ্য</span><span class="lang-en">Metal</span></option>
+                         <option value="glass"><span class="lang-bn">কাঁচ বর্জ্য</span><span class="lang-en">Glass</span></option>
+                    </select>
+                    <input type="number" id="waste-weight-points" placeholder="বর্জ্যের ওজন (কেজি) / Waste Weight (KG)" class="w-full p-2 border border-gray-300 rounded-lg mb-3 text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                    <button id="submit-waste-points-btn" class="w-full btn-primary font-semibold py-2.5 px-5 rounded-lg text-sm">
+                         <span class="lang-bn">পয়েন্টের জন্য জমা দিন</span> <span class="lang-en">Submit for Points</span>
+                    </button>
+                </div>
+                <div class="card p-4 bg-white text-gray-700 mt-4">
+                    <h3 class="text-md font-semibold text-orange-600 mb-2 lang-bn">মোট অর্জিত পয়েন্ট:</h3>
+                    <h3 class="text-md font-semibold text-orange-600 mb-2 lang-en">Total Points Earned:</h3>
+                     <span id="total-points" class="text-xl text-green-600 font-bold">0</span>
+                    <p class="text-xs text-gray-500 mt-1" id="last-submission-info"></p>
+                </div>
+                 <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">জমা দেওয়ার ইতিহাস:</h3>
+                 <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Submission History:</h3>
+
+                <div id="history-list" class="mt-4 space-y-2">
+                     </div>
+            </main>
+        </div>
+
+        <div id="page-notifications" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">নোটিফিকেশন</h1>
+                    <h1 class="text-xl font-semibold lang-en">Notifications</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 text-gray-700 space-y-4 custom-scrollbar">
+                <div class="card p-3 bg-white">
+                    <p class="font-semibold text-orange-600 lang-bn">নতুন অফার:</p><p class="font-semibold text-orange-600 lang-en">New Offer:</p>
+                    <p class="lang-bn">এই সপ্তাহে প্লাস্টিক বর্জ্য জমা দিলে দ্বিগুণ পয়েন্ট!</p><p class="lang-en">Double points for submitting plastic waste this week!</p>
+                     <p class="text-xs text-gray-500 mt-1 lang-bn">১৫ ডিসেম্বর, ২০২৪</p><p class="text-xs text-gray-500 mt-1 lang-en">December 15, 2024</p>
+                </div>
+                 <div class="card p-3 bg-white">
+                    <p class="font-semibold text-orange-600 lang-bn">অনুস্মারক:</p><p class="font-semibold text-orange-600 lang-en">Reminder:</p>
+                    <p class="lang-bn">আপনার নির্ধারিত সংগ্রহের সময় আগামীকাল সকাল ১০টায়।</p><p class="lang-en">Your scheduled pickup is tomorrow at 10:00 AM.</p>
+                     <p class="text-xs text-gray-500 mt-1 lang-bn">১৪ ডিসেম্বর, ২০২৪</p><p class="text-xs text-gray-500 mt-1 lang-en">December 14, 2024</p>
+                </div>
+                 <div class="card p-3 bg-white opacity-70">
+                    <p class="font-semibold text-gray-600 lang-bn">আপডেট:</p><p class="font-semibold text-gray-600 lang-en">Update:</p>
+                    <p class="lang-bn">নতুন পয়েন্ট সিস্টেম ঘোষণা করা হয়েছে। বিস্তারিত জানতে পয়েন্ট পেজ দেখুন!</p><p class="lang-en">New points system announced. Check the Points page for details!</p>
+                     <p class="text-xs text-gray-500 mt-1 lang-bn">১২ ডিসেম্বর, ২০২৪</p><p class="text-xs text-gray-500 mt-1 lang-en">December 12, 2024</p>
+                </div>
+                 <p class="text-center text-gray-500 mt-6 text-sm lang-bn">নোটিফিকেশনের শেষ।</p><p class="text-center text-gray-500 mt-6 text-sm lang-en">End of notifications.</p>
+            </main>
+        </div>
+
+        <div id="page-feedback" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">ফিডব্যাক দিন</h1>
+                    <h1 class="text-xl font-semibold lang-en">Submit Feedback</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 space-y-4">
+                 <div class="card p-4 bg-white text-gray-700 text-center">
+                      <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">সংগ্রহকারীর রেটিং দিন</h3><h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Rate the Collector</h3>
+                     <div id="collector-feedback-rating" class="star-rating flex justify-center">
+                         </div>
+                 </div>
+                <textarea id="feedback-text" placeholder="আপনার ফিডব্যাক এখানে লিখুন... / Write your feedback here..." class="w-full p-3 border border-gray-300 rounded-lg h-32 text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent"></textarea>
+                <button id="submit-feedback-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg">
+                     <span class="lang-bn">ফিডব্যাক জমা দিন</span> <span class="lang-en">Submit Feedback</span>
+                </button>
+            </main>
+        </div>
+
+        <div id="page-schedule-pickup" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">বর্জ্য সংগ্রহের সময় নির্ধারণ</h1>
+                    <h1 class="text-xl font-semibold lang-en">Schedule Waste Pickup</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                 <div class="card p-4 bg-white text-gray-700">
+                     <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">আপনার ঠিকানা</h3>
+                     <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Your Address</h3>
+                     <textarea id="pickup-address" placeholder="সম্পূর্ণ ঠিকানা লিখুন / Enter full address" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent h-20"></textarea>
+                     <div class="bg-gray-200 h-40 flex items-center justify-center text-gray-500 my-3 rounded border border-gray-300">
+                         <span class="lang-bn">মানচিত্র এখানে (ডেমো)</span><span class="lang-en">Map View Here (Demo)</span>
+                     </div>
+                 </div>
+
+                 <label class="block text-gray-700 font-semibold mb-1 lang-bn">বর্জ্যের ধরন:</label>
+                 <label class="block text-gray-700 font-semibold mb-1 lang-en">Select Waste Types:</label>
+                 <div class="card p-4 bg-white space-y-2">
+                     <div class="flex flex-wrap gap-x-4 gap-y-2">
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="plastic" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">প্লাস্টিক</span><span class="ml-2 text-gray-700 lang-en">Plastic</span></label>
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="paper" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">কাগজ</span><span class="ml-2 text-gray-700 lang-en">Paper</span></label>
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="metal" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">ধাতব</span><span class="ml-2 text-gray-700 lang-en">Metal</span></label>
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="glass" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">কাঁচ</span><span class="ml-2 text-gray-700 lang-en">Glass</span></label>
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="organic" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">জৈব</span><span class="ml-2 text-gray-700 lang-en">Organic</span></label>
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="electronic" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">ইলেকট্রনিক</span><span class="ml-2 text-gray-700 lang-en">Electronic</span></label>
+                         <label class="inline-flex items-center"><input type="checkbox" name="pickup-waste-type" value="other" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 text-gray-700 lang-bn">অন্যান্য</span><span class="ml-2 text-gray-700 lang-en">Other</span></label>
+                     </div>
+                 </div>
+
+                 <label for="pickup-date" class="block text-gray-700 font-semibold lang-bn">তারিখ:</label>
+                 <label for="pickup-date" class="block text-gray-700 font-semibold lang-en">Select Date:</label>
+                <input type="date" id="pickup-date" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+
+                 <label for="pickup-time" class="block text-gray-700 font-semibold lang-bn">সময়:</label>
+                 <label for="pickup-time" class="block text-gray-700 font-semibold lang-en">Select Time:</label>
+                <input type="time" id="pickup-time" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+
+                 <label for="pickup-notes" class="block text-gray-700 font-semibold lang-bn">অতিরিক্ত নোট (ঐচ্ছিক):</label>
+                 <label for="pickup-notes" class="block text-gray-700 font-semibold lang-en">Additional Notes (Optional):</label>
+                <textarea id="pickup-notes" placeholder="নোট লিখুন... / Write notes..." class="w-full p-3 border border-gray-300 rounded-lg h-24 text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent"></textarea>
+
+                <button id="confirm-pickup-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg">
+                     <span class="lang-bn">সংগ্রহের অনুরোধ নিশ্চিত করুন</span> <span class="lang-en">Confirm Pickup Request</span>
+                </button>
+            </main>
+        </div>
+
+        <div id="page-user-profile-view" class="page flex-col bg-gray-50">
+             <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">আমার প্রোফাইল</h1>
+                    <h1 class="text-xl font-semibold lang-en">My Profile</h1>
+                </div>
+                </header>
+            <main class="flex-grow p-6 space-y-4 text-gray-700">
+                <div class="text-center mb-6">
+                    <img src="https://placehold.co/80x80/FFE4B5/A0522D?text=U" alt="User Avatar" class="w-20 h-20 rounded-full border-4 border-orange-300 mx-auto shadow-lg" id="profile-view-avatar">
+                    <h2 class="text-2xl font-semibold mt-3" id="profile-view-name"></h2>
+                    <p class="text-sm text-gray-500" id="profile-view-phone"></p>
+                     <p class="text-sm text-gray-500" id="profile-view-email"></p>
+                </div>
+                <div class="card p-4 bg-white space-y-2">
+                    <p><strong class="lang-bn">ঠিকানা:</strong><strong class="lang-en">Address:</strong> <span id="profile-view-address"></span></p>
+                    <p><strong class="lang-bn">সাধারণ বর্জ্যের ধরন:</strong><strong class="lang-en">Common Waste Type:</strong> <span id="profile-view-waste-type"></span></p>
+                    <p><strong class="lang-bn">মোট পয়েন্ট:</strong><strong class="lang-en">Total Points:</strong> <span id="profile-view-points" class="font-bold text-green-600">0</span></p>
+                </div>
+
+                <button class="edit-profile-btn w-full bg-yellow-500 text-gray-800 font-semibold py-3 px-6 rounded-lg mt-8 hover:bg-yellow-600 flex items-center justify-center" data-page="page-user-profile-edit">
+                    <hero-icon name="pencil-square" class="w-5 h-5 mr-2"></hero-icon>
+                    <span class="lang-bn">প্রোফাইল সম্পাদনা করুন</span> <span class="lang-en">Edit Profile</span>
+                </button>
+
+                <button class="w-full bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg mt-10 hover:bg-blue-600" id="contact-us-user-btn"> <span class="lang-bn">যোগাযোগ করুন</span><span class="lang-en">Contact Us</span>
+                </button>
+                 <button class="w-full bg-red-500 text-white font-semibold py-3 px-6 rounded-lg mt-6 hover:bg-red-600" onclick="logout()"> <span class="lang-bn">লগ আউট</span><span class="lang-en">Logout</span>
+                 </button>
+            </main>
+        </div>
+
+        <div id="page-user-profile-edit" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">প্রোফাইল সম্পাদনা করুন</h1>
+                    <h1 class="text-xl font-semibold lang-en">Edit Profile</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                 <div class="flex flex-col items-center justify-center">
+                    <label for="edit-user-photo" class="block text-gray-700 font-semibold mb-2 lang-bn">প্রোফাইল ছবি</label>
+                    <label for="edit-user-photo" class="block text-gray-700 font-semibold mb-2 lang-en">Profile Photo</label>
+                    <div class="w-32 h-32 border-2 border-gray-300 rounded-full overflow-hidden flex items-center justify-center">
+                        <img id="edit-user-photo-preview" src="https://placehold.co/128x128/E5E7EB/4B5563?text=+" alt="Photo Placeholder" class="w-full h-full object-cover text-gray-600">
+                    </div>
+                    <input type="file" id="edit-user-photo" accept="image/*" class="mt-3 text-gray-700">
+                </div>
+                <input type="text" id="edit-user-name" placeholder="আপনার নাম / Your Name" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                <input type="tel" id="edit-user-phone" placeholder="ফোন / Phone" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent bg-gray-100" readonly>
+                 <input type="email" id="edit-user-email" placeholder="ইমেইল / Email" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                <textarea id="edit-user-address" placeholder="ঠিকানা / Address" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent h-24"></textarea>
+                 <select id="edit-user-waste-type" class="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                    <option value="household"><span class="lang-bn">গৃহস্থালির বর্জ্য</span><span class="lang-en">Household Waste</span></option>
+                    <option value="electronic"><span class="lang-bn">ইলেকট্রনিক বর্জ্য</span><span class="lang-en">Electronic Waste</span></option>
+                    <option value="plastic"><span class="lang-bn">প্লাস্টিক বর্জ্য</span><span class="lang-en">Plastic Waste</span></option>
+                    <option value="mixed"><span class="lang-bn">মিশ্র বর্জ্য</span><span class="lang-en">Mixed Waste</span></option>
+                </select>
+                <button id="save-profile-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg mt-4">
+                     <span class="lang-bn">পরিবর্তন সংরক্ষণ করুন</span> <span class="lang-en">Save Changes</span>
+                </button>
+            </main>
+        </div>
+
+        <div id="page-awareness" class="page flex-col bg-gray-50">
+             <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">সচেতনতা বার্তা</h1>
+                    <h1 class="text-xl font-semibold lang-en">Awareness</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 text-gray-700 space-y-4 custom-scrollbar">
+                <div class="card p-4 bg-white">
+                    <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">বর্জ্য পৃথকীকরণ কেন জরুরি?</h3>
+                    <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Why Waste Segregation is Important?</h3>
+                    <p class="text-sm lang-bn">আপনার বাড়ির বর্জ্য সঠিকভাবে পৃথক করলে রিসাইক্লিং সহজ হয়, পরিবেশ দূষণ কমে এবং সম্পদ সাশ্রয় হয়। জৈব, অজৈব এবং ইলেকট্রনিক বর্জ্য আলাদা করুন।</p>
+                     <p class="text-sm lang-en">Proper segregation of household waste facilitates recycling, reduces environmental pollution, and conserves resources. Separate organic, inorganic, and electronic waste.</p>
+                </div>
+                 <div class="card p-4 bg-white">
+                    <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">প্লাস্টিক বর্জ্যের ক্ষতিকর প্রভাব</h3>
+                    <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Harmful Effects of Plastic Waste</h3>
+                    <p class="text-sm lang-bn">প্লাস্টিক পরিবেশে সহজে পচে না। এটি মাটি ও পানি দূষণ করে এবং জীববৈচিত্র্যের জন্য হুমকিস্বরূপ। প্লাস্টিক বর্জ্য রিসাইক্লিংয়ের জন্য আলাদা করে রাখুন।</p>
+                     <p class="text-sm lang-en">Plastic does not decompose easily in the environment. It pollutes soil and water and threatens biodiversity. Keep plastic waste separate for recycling.</p>
+                </div>
+                 <div class="card p-4 bg-white">
+                    <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">ই-বর্জ্য সঠিকভাবে নিষ্পত্তি করুন</h3>
+                    <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Proper Disposal of E-Waste</h3>
+                    <p class="text-sm lang-bn">পুরোনো ইলেকট্রনিক সামগ্রীতে বিষাক্ত পদার্থ থাকে যা পরিবেশের জন্য অত্যন্ত ক্ষতিকর। এগুলো সাধারণ বর্জ্যের সাথে না মিশিয়ে নির্দিষ্ট সংগ্রহ কেন্দ্রে জমা দিন।</p>
+                     <p class="text-sm lang-en">Old electronic items contain toxic substances that are extremely harmful to the environment. Do not mix them with general waste; submit them to designated collection centers.</p>
+                </div>
+            </main>
+        </div>
+
+        <div id="page-collector-history" class="page flex-col bg-gray-50">
+            <header class="header-main p-4 flex items-center shadow-md">
+                <img src="input_file_0.png" alt="Logo" class="h-8 w-8 object-contain mr-3" onerror="this.onerror=null; this.src='https://placehold.co/32x32?text=L';">
+                <button class="back-btn p-1 rounded-full hover:bg-orange-600 mr-3"><hero-icon name="arrow-left" class="w-6 h-6"></hero-icon></button>
+                <div class="flex-grow">
+                    <h1 class="text-xl font-semibold lang-bn">আমার সংগ্রহ ইতিহাস</h1>
+                    <h1 class="text-xl font-semibold lang-en">My Collection History</h1>
+                </div>
+            </header>
+            <main class="flex-grow p-6 text-gray-700">
+                 <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-bn">সংগ্রহের তালিকা:</h3>
+                 <h3 class="text-lg font-semibold text-orange-600 mb-2 lang-en">Collection List:</h3>
+                <div id="collector-history-list" class="space-y-3">
+                      </div>
+                 <p class="text-center text-gray-500 mt-6 text-sm" id="no-collector-history">
+                     <span class="lang-bn">এখনও কোনো সংগ্রহ ইতিহাস নেই।</span> <span class="lang-en">No collection history yet.</span>
+                 </p>
+            </main>
+        </div>
+
+        <nav class="bottom-nav grid grid-cols-4 gap-1 p-2 shadow-inner">
+             <button class="nav-item household-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md" data-page="page-household-dashboard" data-nav-section="home">
+                 <hero-icon name="home" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">হোম</span><span class="text-xs lang-en">Home</span>
+             </button>
+              <button class="nav-item household-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md relative" data-page="page-notifications" data-nav-section="notifications">
+                 <hero-icon name="bell" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">নোটিফিকেশন</span><span class="text-xs lang-en">Notifications</span>
+                 <span class="absolute top-0 right-3 text-xs bg-red-500 text-white rounded-full px-1.5 py-0.5">2</span> </button>
+              <button class="nav-item household-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md" data-page="page-points-history" data-nav-section="history">
+                 <hero-icon name="clock" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">ইতিহাস</span><span class="text-xs lang-en">History</span>
+             </button>
+             <button class="nav-item household-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md" data-page="page-user-profile-view" data-nav-section="profile">
+                 <hero-icon name="user-circle" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">প্রোফাইল</span><span class="text-xs lang-en">Profile</span>
+             </button>
+
+             <button class="nav-item collector-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md" data-page="page-collector-dashboard" data-nav-section="home">
+                 <hero-icon name="home" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">হোম</span><span class="text-xs lang-en">Home</span>
+             </button>
+              <button class="nav-item collector-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md relative" data-page="page-notifications" data-nav-section="notifications">
+                  <hero-icon name="bell" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">নোটিফিকেশন</span><span class="text-xs lang-en">Notifications</span>
+                  <span class="absolute top-0 right-3 text-xs bg-red-500 text-white rounded-full px-1.5 py-0.5">1</span> </button>
+             <button class="nav-item collector-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md" data-page="page-collector-history" data-nav-section="history">
+                 <hero-icon name="clock" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">ইতিহাস</span><span class="text-xs lang-en">History</span>
+             </button>
+             <button class="nav-item collector-nav-item flex flex-col items-center text-gray-600 hover:text-orange-500 p-1 rounded-md" data-page="page-collector-profile" data-nav-section="profile">
+                 <hero-icon name="user-circle" class="w-6 h-6"></hero-icon><span class="text-xs lang-bn">প্রোফাইল</span><span class="text-xs lang-en">Profile</span>
+             </button>
+         </nav>
+
+        <div id="call-vangariwala-modal" class="modal-overlay">
+            <div class="modal-content">
+                <button class="modal-close-btn"><hero-icon name="x-mark" class="w-6 h-6"></hero-icon></button>
+                <h3 class="text-xl font-semibold text-orange-600 mb-4 lang-bn">ভাঙ্গারিওয়ালাকে ডাকুন</h3>
+                <h3 class="text-xl font-semibold text-orange-600 mb-4 lang-en">Call Vangariwala</h3>
+
+                 <div class="mb-4">
+                     <h4 class="font-semibold text-orange-700 mb-2 lang-bn">কাছাকাছি ভাঙ্গারিওয়ালা (ডেমো):</h4>
+                     <h4 class="font-semibold text-orange-700 mb-2 lang-en">Nearby Vangariwalas (Demo):</h4>
+                     <ul class="space-y-1 text-sm text-gray-700">
+                         <li>• Halim Mia – <span class="text-green-600 font-semibold">1.2 km</span></li>
+                         <li>• Sobuj Ali – <span class="text-green-600 font-semibold">2.5 km</span></li>
+                     </ul>
+                 </div>
+
+                 <div class="mt-4 mb-4">
+                     <label class="block font-semibold text-sm mb-1 lang-bn">পিকআপের তারিখ ও সময়:</label>
+                     <label class="block font-semibold text-sm mb-1 lang-en">Pickup Date & Time:</label>
+                     <input type="date" id="call-pickup-date" class="border border-gray-300 w-full p-2 rounded mb-2 text-sm text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                     <input type="time" id="call-pickup-time" class="border border-gray-300 w-full p-2 rounded text-sm text-gray-700 focus:ring-2 focus:ring-orange-400 focus:border-transparent">
+                 </div>
+
+                 <div class="h-32 bg-gray-200 flex items-center justify-center text-gray-500 my-3 rounded border border-gray-300">
+                    <span class="lang-bn">মানচিত্রের অবস্থান (ডেমো)</span>
+                    <span class="lang-en">Map Location (Demo)</span>
+                 </div>
+
+                <p class="text-gray-700 mb-2 lang-bn">আপনার বর্জ্যের ধরন নির্বাচন করুন:</p>
+                <p class="text-gray-700 mb-2 lang-en">Select your waste type(s):</p>
+                <div class="grid grid-cols-2 gap-2 mb-6 text-gray-700">
+                     <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="plastic" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">প্লাস্টিক</span><span class="ml-2 lang-en">Plastic</span></label>
+                    <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="paper" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">কাগজ</span><span class="ml-2 lang-en">Paper</span></label>
+                    <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="metal" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">ধাতব</span><span class="ml-2 lang-en">Metal</span></label>
+                     <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="glass" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">কাঁচ</span><span class="ml-2 lang-en">Glass</span></label>
+                     <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="organic" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">জৈব</span><span class="ml-2 lang-en">Organic</span></label>
+                    <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="electronic" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">ইলেকট্রনিক</span><span class="ml-2 lang-en">Electronic</span></label>
+                     <label class="inline-flex items-center"><input type="checkbox" name="call-waste-type" value="other" class="form-checkbox text-orange-500 rounded focus:ring-orange-400"><span class="ml-2 lang-bn">অন্যান্য</span><span class="ml-2 lang-en">Other</span></label>
+                </div>
+
+                <button id="confirm-call-btn" class="w-full btn-primary font-semibold py-3 px-6 rounded-lg">
+                     <span class="lang-bn">সংগ্রাহককে ডাকুন</span> <span class="lang-en">Call Collector</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Client-side simulation for demonstration.
+        // IMPORTANT: Passwords and sensitive data should NEVER be stored in localStorage in a real application.
+        // A secure backend is necessary for user authentication and data persistence.
+
+        // --- Global State & Data (Simulated in localStorage) ---
+        let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
+        let loggedInUserIdentifier = localStorage.getItem('loggedInUserIdentifier'); // Could be phone or email
+        let currentUserType = null; // Stores 'household' or 'collector'
+        let currentLanguage = localStorage.getItem('currentLanguage') || 'bn'; // Default: Bengali
+
+        // Mock Collection Data for Collector Dashboard
+        let mockCollectionData = JSON.parse(localStorage.getItem('mockCollectionData')) || [
+             { id: 1, userName: "Karim Mia", location: "RR Tower, 3rd Floor", type: "Inorganic", dateTime: "Dec 10, 2024, 9:00 AM", status: "Completed" },
+             { id: 2, userName: "Abdul Hai", location: "Bangabandhu Road, 4th Floor", type: "Organic", dateTime: "Dec 11, 2024, 10:00 AM", status: "Accepted" },
+             { id: 3, userName: "Mahmudul Hasan", location: "Akhtar Center, 5th Floor", type: "Inorganic", dateTime: "Dec 12, 2024, 11:00 AM", status: "Pending" },
+        ];
+        localStorage.setItem('mockCollectionData', JSON.stringify(mockCollectionData));
+
+        // --- DOM Elements ---
+        const pages = document.querySelectorAll('.page');
+        const bottomNav = document.querySelector('.bottom-nav');
+
+        // Page specific elements (cached for performance)
+        const loginMobileNumberInput = document.getElementById('login-mobile-number');
+        const loginEmailInput = document.getElementById('login-email');
+        const loginPasswordInput = document.getElementById('login-password');
+        const signupMobileNumberInput = document.getElementById('signup-mobile-number');
+        const signupEmailInput = document.getElementById('signup-email');
+        const signupNameInput = document.getElementById('signup-name');
+        const signupPasswordInput = document.getElementById('signup-password');
+        const signupAddressInput = document.getElementById('signup-address');
+        const signupUserTypeSelect = document.getElementById('signup-user-type');
+        const signupPhotoInput = document.getElementById('signup-photo');
+        const signupPhotoPreview = document.getElementById('signup-photo-preview');
+
+        const hhDashboardName = document.getElementById('hh-dashboard-name');
+        const householdAvatar = document.getElementById('household-avatar');
+        const hhCurrentPointsDisplay = document.getElementById('hh-current-points');
+        const carbonSavedKgDisplay = document.getElementById('carbon-saved-kg');
+
+        const clDashboardName = document.getElementById('cl-dashboard-name');
+        const collectorAvatar = document.getElementById('collector-avatar');
+        const collectionScheduleList = document.getElementById('collection-schedule-list');
+
+        const totalPointsDisplay = document.getElementById('total-points');
+        const lastSubmissionInfo = document.getElementById('last-submission-info');
+        const historyListDisplay = document.getElementById('history-list');
+        const wasteTypePoints = document.getElementById('waste-type-points');
+        const wasteWeightPoints = document.getElementById('waste-weight-points');
+        const wasteDescriptionPoints = document.getElementById('waste-description-points');
+
+        const feedbackTextarea = document.getElementById('feedback-text');
+        const collectorFeedbackRating = document.getElementById('collector-feedback-rating');
+        let selectedRating = 0; // For feedback stars
+
+        const pickupWasteTypeCheckboxes = document.querySelectorAll('#page-schedule-pickup input[name="pickup-waste-type"]');
+        const pickupDateInput = document.getElementById('pickup-date');
+        const pickupTimeInput = document.getElementById('pickup-time');
+        const pickupNotesTextarea = document.getElementById('pickup-notes');
+        const pickupAddressTextarea = document.getElementById('pickup-address');
+
+        const profileViewAvatar = document.getElementById('profile-view-avatar');
+        const profileViewName = document.getElementById('profile-view-name');
+        const profileViewPhone = document.getElementById('profile-view-phone');
+        const profileViewEmail = document.getElementById('profile-view-email'); 
+        const profileViewAddress = document.getElementById('profile-view-address');
+        const profileViewWasteType = document.getElementById('profile-view-waste-type');
+        const profileViewPoints = document.getElementById('profile-view-points');
+
+        const editUserNameInput = document.getElementById('edit-user-name');
+        const editUserPhoneInput = document.getElementById('edit-user-phone');
+        const editUserEmailInput = document.getElementById('edit-user-email');
+        const editUserAddressInput = document.getElementById('edit-user-address');
+        const editUserWasteTypeInput = document.getElementById('edit-user-waste-type');
+        const editUserPhotoInput = document.getElementById('edit-user-photo');
+        const editUserPhotoPreview = document.getElementById('edit-user-photo-preview');
+
+        const collectorProfileAvatarView = document.getElementById('collector-profile-avatar-view');
+        const collectorProfileNameView = document.getElementById('collector-profile-name-view');
+        const collectorProfileNameDetailView = document.getElementById('collector-profile-name-detail-view');
+        const collectorProfilePhoneView = document.getElementById('collector-profile-phone-view');
+        const collectorProfileAreaView = document.getElementById('collector-profile-area-view');
+        const collectorProfileDetailsView = document.getElementById('collector-profile-details-view');
+        const collectorStarRating = document.getElementById('collector-star-rating');
+        const collectorRatingCount = document.getElementById('collector-rating-count');
+
+        const editCollectorPhotoInput = document.getElementById('edit-collector-photo');
+        const editCollectorPhotoPreview = document.getElementById('edit-collector-photo-preview');
+        const editCollectorNameInput = document.getElementById('edit-collector-name');
+        const editCollectorPhoneInput = document.getElementById('edit-collector-phone');
+        const editCollectorAreaInput = document.getElementById('edit-collector-area');
+        const editCollectorDetailsTextarea = document.getElementById('edit-collector-details');
+
+        // Modal Elements
+        const callVangariwalaModal = document.getElementById('call-vangariwala-modal');
+        const callModalCloseBtn = callVangariwalaModal.querySelector('.modal-close-btn');
+        const callWasteTypeCheckboxes = callVangariwalaModal.querySelectorAll('input[name="call-waste-type"]');
+        const confirmCallBtn = document.getElementById('confirm-call-btn');
+        const callPickupDateInput = document.getElementById('call-pickup-date');
+        const callPickupTimeInput = document.getElementById('call-pickup-time');
+
+        // --- Utility Functions ---
+        function showAlert(message) {
+            alert(message);
+        }
+
+        function formatDateForDisplay() {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            const dateBn = today.toLocaleDateString('bn-BD', options);
+            const dateEn = today.toLocaleDateString('en-US', options);
+
+            if(document.getElementById('current-date-household')) {
+                document.getElementById('current-date-household').textContent = currentLanguage === 'bn' ? dateBn : dateEn;
+            }
+            if(document.getElementById('current-date-collector')) {
+                document.getElementById('current-date-collector').textContent = currentLanguage === 'bn' ? dateBn : dateEn;
+            }
+        }
+
+        // --- Language Toggle ---
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('currentLanguage', lang);
+            document.body.dataset.lang = lang;
+
+            document.querySelectorAll('.lang-toggle button').forEach(button => {
+                button.classList.toggle('active', button.dataset.langCode === lang);
+            });
+            formatDateForDisplay(); 
+            const activePage = document.querySelector('.page.active');
+            if (activePage) navigateTo(activePage.id, true); 
+        }
+
+        document.querySelectorAll('.lang-toggle button').forEach(button => {
+            button.addEventListener('click', () => setLanguage(button.dataset.langCode));
+        });
+
+        // --- Navigation ---
+        function navigateTo(pageId, forceRepopulate = false) {
+            const targetPage = document.getElementById(pageId);
+            if (!targetPage) {
+                console.error("Page not found:", pageId);
+                navigateTo(loggedInUserIdentifier ? (currentUserType === 'household' ? 'page-household-dashboard' : 'page-collector-dashboard') : 'page-login');
+                return;
+            }
+
+            pages.forEach(page => page.classList.remove('active'));
+            targetPage.classList.add('active');
+            targetPage.scrollTop = 0; 
+
+            updateBottomNavActiveState(pageId);
+
+            const currentUser = getCurrentUser();
+            if (currentUser || forceRepopulate) {
+                switch (pageId) {
+                    case 'page-household-dashboard': populateHouseholdDashboard(currentUser); break;
+                    case 'page-collector-dashboard': populateCollectorDashboard(currentUser); break;
+                    case 'page-user-profile-view': populateUserProfileView(currentUser); break;
+                    case 'page-user-profile-edit': populateUserProfileEdit(currentUser); break;
+                    case 'page-collector-profile': populateCollectorProfileView(currentUser); break;
+                    case 'page-collector-profile-edit': populateCollectorProfileEdit(currentUser); break;
+                    case 'page-points-history': populatePointsHistory(currentUser); break;
+                    case 'page-collector-history': populateCollectorHistory(currentUser); break;
+                    case 'page-schedule-pickup': populateSchedulePickup(currentUser); break;
+                    case 'page-feedback': renderRatingStars(collectorFeedbackRating, selectedRating || 0, true); break;
+                }
+            }
+        }
+
+        function updateBottomNavActiveState(currentPageId) {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            document.body.dataset.loggedIn = loggedInUserIdentifier ? "true" : "false";
+
+            if (!loggedInUserIdentifier) {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.style.display = 'none');
+                return;
+            }
+
+            const currentUser = getCurrentUser();
+            if (!currentUser) return; 
+
+            const isHousehold = currentUser.userType === 'household';
+            document.querySelectorAll('.household-nav-item').forEach(nav => nav.style.display = isHousehold ? 'flex' : 'none');
+            document.querySelectorAll('.collector-nav-item').forEach(nav => nav.style.display = !isHousehold ? 'flex' : 'none');
+
+            const sectionPageMapping = {
+                'home': ['page-household-dashboard', 'page-collector-dashboard'],
+                'notifications': ['page-notifications'],
+                'history': ['page-points-history', 'page-collector-history'],
+                'profile': ['page-user-profile-view', 'page-user-profile-edit', 'page-collector-profile', 'page-collector-profile-edit']
+            };
+
+            navItems.forEach(item => {
+                const navSection = item.dataset.navSection;
+                if (sectionPageMapping[navSection]?.includes(currentPageId)) {
+                    if ((isHousehold && item.classList.contains('household-nav-item')) ||
+                        (!isHousehold && item.classList.contains('collector-nav-item'))) {
+                        item.classList.add('active');
+                    }
+                }
+            });
+        }
+
+        // --- User Management ---
+        function getCurrentUser() {
+            if (!loggedInUserIdentifier) return null;
+            return registeredUsers[loggedInUserIdentifier] || null;
+        }
+
+
+        function login() {
+            const mobile = loginMobileNumberInput.value.trim();
+            const email = loginEmailInput.value.trim().toLowerCase();
+            const password = loginPasswordInput.value.trim();
+
+            if ((!mobile && !email) || !password) {
+                showAlert(currentLanguage === 'bn' ? "মোবাইল নম্বর অথবা ইমেইল এবং পাসওয়ার্ড দিন।" : "Please enter mobile number or email, and password.");
+                return;
+            }
+
+            let user = null;
+            let foundUserIdentifier = null;
+
+            if (email) {
+                for (const id in registeredUsers) {
+                    if (registeredUsers[id].email && registeredUsers[id].email.toLowerCase() === email && registeredUsers[id].password === password) {
+                        user = registeredUsers[id];
+                        foundUserIdentifier = id;
+                        break;
+                    }
+                }
+            }
+
+            if (!user && mobile) {
+                 for (const id in registeredUsers) {
+                    if (registeredUsers[id].phone && registeredUsers[id].phone === mobile && registeredUsers[id].password === password) {
+                        user = registeredUsers[id];
+                        foundUserIdentifier = id;
+                        break;
+                    }
+                }
+            }
+
+            if (user) {
+                loggedInUserIdentifier = foundUserIdentifier; 
+                localStorage.setItem('loggedInUserIdentifier', loggedInUserIdentifier);
+                currentUserType = user.userType;
+                showAlert(currentLanguage === 'bn' ? "লগইন সফল!" : "Login successful!");
+                navigateTo(currentUserType === 'household' ? 'page-household-dashboard' : 'page-collector-dashboard');
+            } else {
+                showAlert(currentLanguage === 'bn' ? "ভুল মোবাইল নম্বর, ইমেইল বা পাসওয়ার্ড।" : "Invalid mobile number, email, or password.");
+            }
+        }
+
+        function signup() {
+            const mobile = signupMobileNumberInput.value.trim();
+            const email = signupEmailInput.value.trim().toLowerCase();
+            const name = signupNameInput.value.trim();
+            const password = signupPasswordInput.value.trim();
+            const address = signupAddressInput.value.trim();
+            const userType = signupUserTypeSelect.value;
+            const photoFile = signupPhotoInput.files[0];
+
+            if (!mobile || !name || !password || !address || !userType) {
+                showAlert(currentLanguage === 'bn' ? "অনুগ্রহ করে মোবাইল নম্বর সহ সকল আবশ্যক ফিল্ড পূরণ করুন।" : "Please fill all required fields including mobile number.");
+                return;
+            }
+
+            // Removed duplicate checks for demo purposes
+            // if (Object.values(registeredUsers).some(user => user.phone === mobile)) {
+            //     showAlert(currentLanguage === 'bn' ? "এই মোবাইল নম্বর দিয়ে ইতিমধ্যে অ্যাকাউন্ট আছে।" : "This mobile number is already registered.");
+            //     return;
+            // }
+            // if (email && Object.values(registeredUsers).some(user => user.email && user.email.toLowerCase() === email)) {
+            //     showAlert(currentLanguage === 'bn' ? "এই ইমেইল দিয়ে ইতিমধ্যে অ্যাকাউন্ট আছে।" : "This email is already registered.");
+            //     return;
+            // }
+
+            const processSignup = (photoDataUrl) => {
+                const newUserKey = mobile + "_" + Date.now(); // Create a more unique key for demo with same numbers
+
+                const newUser = {
+                    id: newUserKey, // Store the unique key as an id as well for reference
+                    phone: mobile, 
+                    email: email || null, 
+                    name, password, address, userType,
+                    photo: photoDataUrl || (userType === 'household' ? 'https://placehold.co/80x80/FFE4B5/A0522D?text=U' : 'https://placehold.co/100x100/FFDAB9/8B4513?text=C'),
+                    points: userType === 'household' ? 0 : undefined,
+                    history: userType === 'household' ? [] : undefined,
+                    area: userType === 'collector' ? (currentLanguage === 'bn' ? "নির্ধারিত এলাকা (ডেমো)" : "Assigned Area (Demo)") : undefined,
+                    details: userType === 'collector' ? (currentLanguage === 'bn' ? "সংগ্রহের বিবরণ (ডেমো)" : "Collection Details (Demo)") : undefined,
+                    rating: userType === 'collector' ? 4 : undefined, 
+                    feedbackCount: userType === 'collector' ? (Math.floor(Math.random() * 100) + 20) : undefined 
+                };
+                
+                registeredUsers[newUserKey] = newUser; 
+                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                showAlert(currentLanguage === 'bn' ? "অ্যাকাউন্ট তৈরি হয়েছে! লগইন করুন।" : "Account created! Please login.");
+                signupMobileNumberInput.value = ''; signupEmailInput.value = ''; signupNameInput.value = ''; signupPasswordInput.value = '';
+                signupAddressInput.value = ''; signupUserTypeSelect.value = ''; signupPhotoInput.value = '';
+                signupPhotoPreview.src = "https://placehold.co/128x128/E5E7EB/4B5563?text=+";
+                navigateTo('page-login');
+            };
+
+            if (photoFile) {
+                const reader = new FileReader();
+                reader.onloadend = () => processSignup(reader.result);
+                reader.readAsDataURL(photoFile);
+            } else {
+                processSignup(null);
+            }
+        }
+
+        function logout() {
+            loggedInUserIdentifier = null;
+            localStorage.removeItem('loggedInUserIdentifier');
+            currentUserType = null;
+            loginMobileNumberInput.value = '';
+            loginEmailInput.value = '';
+            loginPasswordInput.value = '';
+            showAlert(currentLanguage === 'bn' ? "লগ আউট সফল।" : "Logged out successfully.");
+            navigateTo('page-login');
+        }
+
+        // --- Profile Edit & View ---
+        function populateUserProfileView(user) {
+            if (!user || user.userType !== 'household') return;
+            profileViewAvatar.src = user.photo;
+            profileViewName.textContent = user.name;
+            profileViewPhone.textContent = user.phone ? "+880" + user.phone : ""; 
+            profileViewEmail.textContent = user.email || ""; 
+            profileViewAddress.textContent = user.address;
+            let wasteTypeDisplay = user.wasteType || 'mixed'; 
+            if (currentLanguage === 'bn') {
+                const bnTypes = {'household': 'গৃহস্থালির বর্জ্য', 'electronic': 'ইলেকট্রনিক বর্জ্য', 'plastic': 'প্লাস্টিক বর্জ্য', 'mixed': 'মিশ্র বর্জ্য'};
+                wasteTypeDisplay = bnTypes[wasteTypeDisplay] || wasteTypeDisplay;
+            } else {
+                const enTypes = {'household': 'Household Waste', 'electronic': 'Electronic Waste', 'plastic': 'Plastic Waste', 'mixed': 'Mixed Waste'};
+                wasteTypeDisplay = enTypes[wasteTypeDisplay] || wasteTypeDisplay;
+            }
+            profileViewWasteType.textContent = wasteTypeDisplay;
+            profileViewPoints.textContent = user.points || 0;
+        }
+
+        function populateUserProfileEdit(user) {
+            if (!user || user.userType !== 'household') return;
+            editUserNameInput.value = user.name;
+            editUserPhoneInput.value = user.phone ? "+880" + user.phone : ""; 
+            editUserEmailInput.value = user.email || ""; 
+            editUserAddressInput.value = user.address;
+            editUserWasteTypeInput.value = user.wasteType || 'mixed';
+            editUserPhotoPreview.src = user.photo;
+            editUserPhotoInput.value = '';
+
+            editUserPhoneInput.readOnly = true; // Phone is part of the unique key now, less safe to edit directly in demo
+            editUserPhoneInput.classList.add('bg-gray-100');
+            editUserEmailInput.readOnly = false;
+            editUserEmailInput.classList.remove('bg-gray-100');
+        }
+
+        function saveUserProfile() {
+            const currentUser = getCurrentUser();
+            if (!currentUser || currentUser.userType !== 'household') return;
+
+            const originalUserKey = loggedInUserIdentifier; 
+
+            currentUser.name = editUserNameInput.value.trim() || currentUser.name;
+            currentUser.address = editUserAddressInput.value.trim() || currentUser.address;
+            currentUser.wasteType = editUserWasteTypeInput.value;
+            
+            const newEmail = editUserEmailInput.value.trim().toLowerCase() || null;
+
+            // Simplified email change for demo: just update it. In real app, verify uniqueness if changed.
+            currentUser.email = newEmail;
+
+
+            const photoFile = editUserPhotoInput.files[0];
+            const updateStorageAndNav = () => {
+                registeredUsers[originalUserKey] = currentUser; 
+                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                showAlert(currentLanguage === 'bn' ? "প্রোফাইল আপডেট হয়েছে!" : "Profile updated!");
+                navigateTo('page-user-profile-view');
+            };
+
+            if (photoFile) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    currentUser.photo = reader.result;
+                    updateStorageAndNav();
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                updateStorageAndNav();
+            }
+        }
+
+
+        function populateCollectorProfileView(user) {
+            if (!user || user.userType !== 'collector') return;
+            collectorProfileAvatarView.src = user.photo;
+            collectorProfileNameView.textContent = user.name;
+            collectorProfileNameDetailView.textContent = user.name;
+            collectorProfilePhoneView.textContent = user.phone ? "+880" + user.phone : "";
+            collectorProfileAreaView.textContent = user.area || (currentLanguage === 'bn' ? "নির্ধারিত নয়" : "Not set");
+            collectorProfileDetailsView.textContent = user.details || (currentLanguage === 'bn' ? "কোনো বিবরণ নেই" : "No details");
+            renderRatingStars(collectorStarRating, user.rating || 0, false);
+            collectorRatingCount.textContent = user.feedbackCount || 0;
+        }
+
+        function populateCollectorProfileEdit(user) {
+            if (!user || user.userType !== 'collector') return;
+            editCollectorNameInput.value = user.name;
+            editCollectorPhoneInput.value = user.phone ? "+880" + user.phone : ""; 
+            editCollectorAreaInput.value = user.area;
+            editCollectorDetailsTextarea.value = user.details;
+            editCollectorPhotoPreview.src = user.photo;
+            editCollectorPhotoInput.value = '';
+            editCollectorPhoneInput.readOnly = true;
+            editCollectorPhoneInput.classList.add('bg-gray-100');
+        }
+
+        function saveCollectorProfile() {
+            const currentUser = getCurrentUser();
+            if (!currentUser || currentUser.userType !== 'collector') return;
+            const originalUserKey = loggedInUserIdentifier; 
+            currentUser.name = editCollectorNameInput.value.trim() || currentUser.name;
+            currentUser.area = editCollectorAreaInput.value.trim() || currentUser.area;
+            currentUser.details = editCollectorDetailsTextarea.value.trim() || currentUser.details;
+            
+            const photoFile = editCollectorPhotoInput.files[0];
+            const updateStorageAndNav = () => {
+                registeredUsers[originalUserKey] = currentUser;
+                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                showAlert(currentLanguage === 'bn' ? "প্রোফাইল আপডেট হয়েছে!" : "Profile updated!");
+                navigateTo('page-collector-profile');
+            };
+            if (photoFile) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    currentUser.photo = reader.result;
+                    updateStorageAndNav();
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                updateStorageAndNav();
+            }
+        }
+
+        function populateHouseholdDashboard(user) {
+            if (!user || user.userType !== 'household') return;
+            hhDashboardName.textContent = user.name;
+            householdAvatar.src = user.photo;
+            hhCurrentPointsDisplay.textContent = user.points || 0;
+            calculateAndDisplayCarbonSaved(user);
+        }
+
+        function populateCollectorDashboard(user) {
+            if (!user || user.userType !== 'collector') return;
+            clDashboardName.textContent = user.name;
+            collectorAvatar.src = user.photo;
+            populateCollectionSchedule();
+        }
+
+        const CO2_PER_KG_WASTE = 1.5;
+        function calculateAndDisplayCarbonSaved(user) {
+            if (!user || !user.history) {
+                carbonSavedKgDisplay.textContent = "0";
+                return;
+            }
+            const totalWeight = user.history.reduce((sum, entry) => sum + (entry.weight || 0), 0);
+            carbonSavedKgDisplay.textContent = (totalWeight * CO2_PER_KG_WASTE).toFixed(1);
+        }
+
+        function populatePointsHistory(user) {
+            if (!user || user.userType !== 'household') return;
+            totalPointsDisplay.textContent = user.points || 0;
+            historyListDisplay.innerHTML = '';
+            if (!user.history || user.history.length === 0) {
+                lastSubmissionInfo.textContent = currentLanguage === 'bn' ? "কোনো জমা নেই।" : "No submissions yet.";
+                return;
+            }
+            const lastSub = user.history[0];
+            lastSubmissionInfo.textContent = `${currentLanguage === 'bn' ? 'শেষ জমা:' : 'Last:'} ${lastSub.weight}KG ${lastSub.type} = ${lastSub.points} ${currentLanguage === 'bn' ? 'পয়েন্ট' : 'pts'}`;
+
+            user.history.forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'card p-3 bg-white text-gray-600 text-sm';
+                item.innerHTML = `
+                    <p><strong>${currentLanguage === 'bn' ? 'ধরন:' : 'Type:'}</strong> ${entry.type}</p>
+                    <p><strong>${currentLanguage === 'bn' ? 'ওজন:' : 'Weight:'}</strong> ${entry.weight} KG</p>
+                    <p><strong>${currentLanguage === 'bn' ? 'পয়েন্ট:' : 'Points:'}</strong> +${entry.points}</p>
+                    ${entry.description ? `<p><strong>${currentLanguage === 'bn' ? 'নোট:' : 'Notes:'}</strong> ${entry.description}</p>` : ''}
+                    <p class="text-xs text-gray-400">${currentLanguage === 'bn' ? 'তারিখ:' : 'Date:'} ${entry.date}</p>`;
+                historyListDisplay.appendChild(item);
+            });
+        }
+
+        function submitWasteForPoints() {
+            const currentUser = getCurrentUser();
+            if (!currentUser || currentUser.userType !== 'household') return;
+
+            const type = wasteTypePoints.value;
+            const weight = parseFloat(wasteWeightPoints.value);
+            const description = wasteDescriptionPoints.value.trim();
+
+            if (!type || !weight || isNaN(weight) || weight <= 0) {
+                showAlert(currentLanguage === 'bn' ? "সঠিক বর্জ্যের ধরন এবং ওজন দিন।" : "Please enter valid waste type and weight.");
+                return;
+            }
+            const pointsEarned = Math.round(weight * 10); 
+            currentUser.points = (currentUser.points || 0) + pointsEarned;
+            currentUser.history.unshift({ type, weight, points: pointsEarned, description, date: new Date().toLocaleDateString(currentLanguage === 'bn' ? 'bn-BD' : 'en-US') });
+
+            registeredUsers[loggedInUserIdentifier] = currentUser;
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+
+            populatePointsHistory(currentUser);
+            calculateAndDisplayCarbonSaved(currentUser); 
+            showAlert(`${pointsEarned} ${currentLanguage === 'bn' ? 'পয়েন্ট যোগ হয়েছে!' : 'points added!'}`);
+            wasteWeightPoints.value = ''; wasteDescriptionPoints.value = '';
+        }
+
+        function populateCollectionSchedule() {
+            collectionScheduleList.innerHTML = ''; 
+            const activePickups = mockCollectionData.filter(p => p.status === "Pending" || p.status === "Accepted");
+            if (activePickups.length === 0) {
+                collectionScheduleList.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-500">${currentLanguage === 'bn' ? 'কোনো সক্রিয় সংগ্রহ নেই।' : 'No active pickups.'}</td></tr>`;
+                return;
+            }
+            activePickups.forEach(pickup => {
+                const row = collectionScheduleList.insertRow();
+                row.className = 'hover:bg-orange-50 transition-colors cursor-pointer';
+                row.innerHTML = `
+                    <td class="p-3 text-sm">${pickup.userName}</td>
+                    <td class="p-3 text-sm">${pickup.location}</td>
+                    <td class="p-3 text-sm">${pickup.type}</td>
+                    <td class="p-3 text-sm">${pickup.dateTime}</td>`;
+                row.addEventListener('click', () => showAlert(`Viewing details for ${pickup.userName}. Status: ${pickup.status}`));
+            });
+        }
+
+        function populateCollectorHistory(user) {
+            if (!user || user.userType !== 'collector') return;
+            const listEl = document.getElementById('collector-history-list');
+            const noHistoryEl = document.getElementById('no-collector-history');
+            listEl.innerHTML = '';
+            const completedPickups = mockCollectionData.filter(p => p.status === "Completed"); 
+            if (completedPickups.length === 0) {
+                noHistoryEl.style.display = 'block';
+                return;
+            }
+            noHistoryEl.style.display = 'none';
+            completedPickups.forEach(pickup => {
+                const item = document.createElement('div');
+                item.className = 'card p-3 bg-white';
+                item.innerHTML = `
+                    <p><strong>User:</strong> ${pickup.userName}</p>
+                    <p><strong>Location:</strong> ${pickup.location}</p>
+                    <p><strong>Date:</strong> ${pickup.dateTime}</p>
+                    <p class="text-sm text-green-600 font-semibold">Status: ${pickup.status}</p>`;
+                listEl.appendChild(item);
+            });
+        }
+
+        function renderRatingStars(container, rating = 0, enableClick = false) {
+            container.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const starIconContainer = document.createElement('span');
+                starIconContainer.className = 'star-icon-wrapper inline-block p-1';
+                if (enableClick) starIconContainer.classList.add('cursor-pointer');
+
+                const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                star.setAttribute('class', 'w-6 h-6 star-icon'); 
+                star.setAttribute('viewBox', '0 0 20 20');
+                star.setAttribute('fill', 'currentColor');
+                star.innerHTML = `<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.97a1 1 0 00.95.69h4.18c.969 0 1.371 1.24.588 1.81l-3.38 2.454a1 1 0 00-.364 1.118l1.287 3.97c.3.921-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.197-1.539-1.118l1.287-3.97a1 1 0 00-.364-1.118L2.28 9.397c-.783-.57-.38-1.81.588-1.81h4.18a1 1 0 00.95-.69l1.286-3.97z" />`;
+                star.style.color = (i <= rating) ? 'var(--secondary-yellow)' : '#d1d5db'; 
+
+                starIconContainer.appendChild(star);
+                if (enableClick) {
+                    starIconContainer.dataset.ratingValue = i;
+                    starIconContainer.addEventListener('click', (e) => {
+                        selectedRating = parseInt(e.currentTarget.dataset.ratingValue);
+                        renderRatingStars(container, selectedRating, true);
+                    });
+                }
+                container.appendChild(starIconContainer);
+            }
+        }
+
+        function submitFeedback() {
+            const feedback = feedbackTextarea.value.trim();
+            if (!feedback && selectedRating === 0) {
+                showAlert(currentLanguage === 'bn' ? "ফিডব্যাক লিখুন বা রেটিং দিন।" : "Please write feedback or give a rating.");
+                return;
+            }
+            showAlert(`${currentLanguage === 'bn' ? 'ফিডব্যাক ও রেটিং ('+selectedRating+' স্টার) জমা হয়েছে!' : 'Feedback & rating ('+selectedRating+' stars) submitted!'}`);
+            feedbackTextarea.value = '';
+            selectedRating = 0;
+            renderRatingStars(collectorFeedbackRating, 0, true);
+            navigateTo(getCurrentUser().userType === 'household' ? 'page-household-dashboard' : 'page-collector-dashboard');
+        }
+
+        function populateSchedulePickup(user) {
+            if (user && user.userType === 'household') {
+                pickupAddressTextarea.value = user.address || '';
+            }
+            pickupWasteTypeCheckboxes.forEach(cb => cb.checked = false);
+            pickupDateInput.value = '';
+            pickupTimeInput.value = '';
+            pickupNotesTextarea.value = '';
+        }
+
+        function confirmPickupRequest() {
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+
+            const selectedTypes = Array.from(pickupWasteTypeCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+            const date = pickupDateInput.value;
+            const time = pickupTimeInput.value;
+            const address = pickupAddressTextarea.value.trim();
+
+            if (selectedTypes.length === 0 || !date || !time || !address) {
+                showAlert(currentLanguage === 'bn' ? "বর্জ্যের ধরন, ঠিকানা, তারিখ ও সময় দিন।" : "Select waste type(s), address, date, and time.");
+                return;
+            }
+            showAlert(currentLanguage === 'bn' ? "পিকআপ অনুরোধ সফল হয়েছে!" : "Pickup request confirmed!");
+            mockCollectionData.unshift({
+                id: mockCollectionData.length + 1,
+                userName: currentUser.name,
+                location: address,
+                type: selectedTypes.join(', '),
+                dateTime: `${new Date(date + ' ' + time).toLocaleDateString(currentLanguage === 'bn' ? 'bn-BD' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, ${new Date(date + ' ' + time).toLocaleTimeString(currentLanguage === 'bn' ? 'bn-BD' : 'en-US', { hour: 'numeric', minute: '2-digit'})}`,
+                status: "Pending"
+            });
+            localStorage.setItem('mockCollectionData', JSON.stringify(mockCollectionData));
+
+            populateSchedulePickup(currentUser); 
+            navigateTo('page-household-dashboard');
+        }
+
+        function openCallVangariwalaModal() {
+            callVangariwalaModal.classList.add('visible');
+            callWasteTypeCheckboxes.forEach(cb => cb.checked = false);
+            callPickupDateInput.value = '';
+            callPickupTimeInput.value = '';
+        }
+        function closeCallVangariwalaModal() {
+            callVangariwalaModal.classList.remove('visible');
+        }
+        function confirmCallVangariwala() {
+            const selectedTypes = Array.from(callWasteTypeCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+            const date = callPickupDateInput.value;
+            const time = callPickupTimeInput.value;
+            if (selectedTypes.length === 0 || !date || !time) {
+                showAlert(currentLanguage === 'bn' ? "বর্জ্যের ধরন, তারিখ ও সময় দিন।" : "Select waste type(s), date, and time.");
+                return;
+            }
+            showAlert(currentLanguage === 'bn' ? "সংগ্রাহককে ডাকার অনুরোধ পাঠানো হয়েছে!" : "Request to call collector sent!");
+            closeCallVangariwalaModal();
+        }
+
+        function handleContactUs() {
+            showAlert(currentLanguage === 'bn' ? "যোগাযোগের তথ্য শীঘ্রই যুক্ত করা হবে।" : "Contact information will be added soon.");
+        }
+
+        function setupEventListeners() {
+            document.getElementById('login-btn').addEventListener('click', login);
+            document.getElementById('goto-signup-from-login-btn').addEventListener('click', () => navigateTo('page-signup'));
+            document.getElementById('goto-login-from-signup-btn').addEventListener('click', () => navigateTo('page-login')); 
+            document.getElementById('create-account-btn').addEventListener('click', signup);
+
+            const contactUsUserBtn = document.getElementById('contact-us-user-btn');
+            if(contactUsUserBtn) contactUsUserBtn.addEventListener('click', handleContactUs);
+
+            const contactUsCollectorBtn = document.getElementById('contact-us-collector-btn');
+            if(contactUsCollectorBtn) contactUsCollectorBtn.addEventListener('click', handleContactUs);
+
+            signupPhotoInput.addEventListener('change', e => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = ev => signupPhotoPreview.src = ev.target.result;
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            editUserPhotoInput.addEventListener('change', e => {
+                 if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = ev => editUserPhotoPreview.src = ev.target.result;
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+            editCollectorPhotoInput.addEventListener('change', e => {
+                 if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = ev => editCollectorPhotoPreview.src = ev.target.result;
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            document.getElementById('cash-out-btn')?.addEventListener('click', () => showAlert(currentLanguage === 'bn' ? "ক্যাশ আউট ফিচার শীঘ্রই আসছে!" : "Cash out feature coming soon!"));
+            document.getElementById('call-vangariwala-btn')?.addEventListener('click', openCallVangariwalaModal);
+            document.getElementById('submit-waste-points-btn')?.addEventListener('click', submitWasteForPoints);
+            document.getElementById('submit-feedback-btn')?.addEventListener('click', submitFeedback);
+            document.getElementById('confirm-pickup-btn')?.addEventListener('click', confirmPickupRequest);
+            document.getElementById('save-profile-btn')?.addEventListener('click', saveUserProfile);
+
+            document.getElementById('search-location-btn')?.addEventListener('click', () => showAlert(currentLanguage === 'bn' ? "লোকেশন সার্চ শীঘ্রই আসছে!" : "Location search coming soon!"));
+            document.getElementById('save-collector-profile-btn')?.addEventListener('click', saveCollectorProfile);
+
+            callModalCloseBtn?.addEventListener('click', closeCallVangariwalaModal);
+            confirmCallBtn?.addEventListener('click', confirmCallVangariwala);
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => navigateTo(item.dataset.page));
+            });
+            // Ensure .edit-profile-btn listeners are correctly attached AFTER elements are potentially created/moved
+            // This setup is fine if they are always in the DOM. If they are dynamically added, event delegation would be better.
+            // For now, assuming they are part of initial HTML or populated into these specific page structures.
+            document.querySelectorAll('#page-user-profile-view .edit-profile-btn, #page-collector-profile .edit-profile-btn').forEach(button => {
+                 button.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent potential conflicts if nested
+                    navigateTo(button.dataset.page);
+                 });
+            });
+
+
+            document.querySelectorAll('.back-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const currentPageId = button.closest('.page').id;
+                    const specificTargetPage = button.dataset.targetPage;
+                    if (specificTargetPage) {
+                        navigateTo(specificTargetPage);
+                        return;
+                    }
+
+                    const user = getCurrentUser();
+                    let targetPage;
+                    if (currentPageId === 'page-user-profile-edit') targetPage = 'page-user-profile-view';
+                    else if (currentPageId === 'page-collector-profile-edit') targetPage = 'page-collector-profile';
+                    else if (currentPageId === 'page-signup') targetPage = 'page-login'; 
+                    else targetPage = user ? (user.userType === 'household' ? 'page-household-dashboard' : 'page-collector-dashboard') : 'page-login';
+                    navigateTo(targetPage);
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            setLanguage(currentLanguage); 
+            formatDateForDisplay();
+            setupEventListeners(); // Call this once
+
+            setTimeout(() => {
+                const user = getCurrentUser();
+                if (user) {
+                    currentUserType = user.userType;
+                    navigateTo(currentUserType === 'household' ? 'page-household-dashboard' : 'page-collector-dashboard');
+                } else {
+                    navigateTo(Object.keys(registeredUsers).length > 0 ? 'page-login' : 'page-signup');
+                }
+            }, 1500); // Reduced splash screen time slightly for faster testing
+        });
+
+    </script>
+</body>
+</html>
